@@ -173,3 +173,11 @@ message PoolTwapHistory {
   uint64 poolId = 2;
   repeated TwapPair twapPairs = 3;
 }
+
+// ModifiedPool records the pools with changes in the block
+// and gets stored in Transient Store, consequently used for calculaiting pool
+// twap
+message ModifiedPool {
+  repeated string tokenChanged = 1;
+  uint64 poolId = 2;
+}

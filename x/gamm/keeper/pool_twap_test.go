@@ -4,29 +4,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/x/gamm"
 	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
-
-func (suite *KeeperTestSuite) TestUpdatePoolTwap() {
-	suite.SetupTest()
-
-	tests := []struct {
-		fn func()
-	}{
-		{
-			fn: func() {
-				poolId := suite.preparePool()
-
-				ctx := suite.ctx.WithBlockTime(time.Now().Add(time.Second))
-				err := suite.app.GAMMKeeper.UpdatePoolTwap(ctx, poolId, "foo", "bar", "test")
-				suite.Require().Error(err)
-			},
-		},
-	}
-	for _, test := range tests {
-		test.fn()
-	}
-}
 
 func (suite *KeeperTestSuite) TestJoinPoolTwap() {
 	suite.SetupTest()
@@ -231,6 +211,7 @@ func (suite *KeeperTestSuite) TestExitPoolTwap() {
 				_, err := suite.app.GAMMKeeper.ExitSwapShareAmountIn(ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
 				suite.Require().NoError(err)
 
+				gamm.EndBlocker(ctx, suite.app.GAMMKeeper)
 				ctx = suite.ctx.WithBlockTime(time.Now().Add(time.Second * 2))
 				poolTwap, err := suite.app.GAMMKeeper.GetOrCreatePoolTwapHistory(ctx, poolId, time.Now().Add(time.Second*2))
 				suite.Require().NoError(err)

@@ -47,6 +47,17 @@ func (k Keeper) GetPoolTwapHistory(ctx sdk.Context, poolId uint64, queryTime tim
 	return poolTwap, true
 }
 
+func (k Keeper) GetModifiedPool(ctx sdk.Context, poolId uint64) types.ModifiedPool {
+	transientStore := ctx.TransientStore(k.tKey)
+	modifiedPoolKey := types.GetKeyModifiedPool(poolId)
+
+	bz := transientStore.Get(modifiedPoolKey)
+	modifiedPool := types.ModifiedPool{}
+	k.cdc.MustUnmarshalBinaryBare(bz, &modifiedPool)
+
+	return modifiedPool
+}
+
 func (k Keeper) SetPoolTwap(ctx sdk.Context, poolTwap types.PoolTwapHistory) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&poolTwap)
@@ -54,6 +65,30 @@ func (k Keeper) SetPoolTwap(ctx sdk.Context, poolTwap types.PoolTwapHistory) {
 
 	poolTwapKey := types.GetKeyPoolTwaps(poolTwap.PoolId, timestamp)
 	store.Set(poolTwapKey, bz)
+}
+
+func (k Keeper) SetModifiedPool(ctx sdk.Context, poolId uint64, modifiedPool types.ModifiedPool) {
+	transientStore := ctx.TransientStore(k.tKey)
+	bz := k.cdc.MustMarshalBinaryBare(&modifiedPool)
+
+	modifiedPoolKey := types.GetKeyModifiedPool(poolId)
+	transientStore.Set(modifiedPoolKey, bz)
+}
+
+func (k Keeper) UpdateModifiedPool(ctx sdk.Context, poolId uint64, tokens ...string) {
+	modifiedPool := k.GetModifiedPool(ctx, poolId)
+	if modifiedPool.PoolId == 0 {
+		modifiedPool.PoolId = poolId
+	}
+
+	for _, token := range tokens {
+		for _, existingToken := range modifiedPool.TokenChanged {
+			if token != existingToken {
+				modifiedPool.TokenChanged = append(modifiedPool.TokenChanged, token)
+			}
+		}
+	}
+	k.SetModifiedPool(ctx, poolId, modifiedPool)
 }
 
 func (k Keeper) CreatePoolTwap(ctx sdk.Context, poolId uint64) (err error) {
@@ -103,44 +138,52 @@ func (k Keeper) newPoolTwapHistory(ctx sdk.Context, poolId uint64) (types.PoolTw
 }
 
 // UpdatePoolTwap update pool twap with token(s) that have changed
-func (k Keeper) UpdatePoolTwap(ctx sdk.Context, poolId uint64, tokens ...string) (err error) {
-	currentTime := ctx.BlockTime()
-	recentPoolTwap, err := k.GetOrCreatePoolTwapHistory(ctx, poolId, currentTime)
-	if err != nil {
-		return err
-	}
+func (k Keeper) UpdatePoolTwap(ctx sdk.Context) (err error) {
+	transientStore := ctx.TransientStore(k.tKey)
+	iter := sdk.KVStorePrefixIterator(transientStore, types.KeyModifiedPool)
 
-	if len(tokens) > 2 {
-		return fmt.Errorf("tokens should be two or less")
-	}
-	currentTimeElapsedDuration := currentTime.Sub(recentPoolTwap.TimeStamp)
-	// division between integer, since minimum unit for duration is seconds
-	currentTimeElapsed := currentTimeElapsedDuration.Nanoseconds() / 1_000_000_000
-
-	// iterate through the array of spot prices,
-	// updating all spot prices that are related to the changed token
-	for i, twapPair := range recentPoolTwap.TwapPairs {
-		// if any of the spot price pairs in twap history are related to the swapped tokens,
-		// update the spot price cumulative
-		if contains(tokens, twapPair.TokenIn, twapPair.TokenOut) {
-			changedSpotPrice, err := k.CalculateSpotPrice(ctx, poolId, twapPair.TokenIn, twapPair.TokenOut)
-			if err != nil {
-				return err
-			}
-			recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(changedSpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
-			recentPoolTwap.TwapPairs[i].SpotPrice = changedSpotPrice
-		} else {
-			recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(recentPoolTwap.TwapPairs[i].SpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		modifiedPoolKey := iter.Value()
+		bz := transientStore.Get(modifiedPoolKey)
+		modifiedPool := types.ModifiedPool{}
+		k.cdc.MustUnmarshalBinaryBare(bz, &modifiedPool)
+		currentTime := ctx.BlockTime()
+		recentPoolTwap, err := k.GetOrCreatePoolTwapHistory(ctx, modifiedPool.PoolId, currentTime)
+		if err != nil {
+			return err
 		}
+
+		currentTimeElapsedDuration := currentTime.Sub(recentPoolTwap.TimeStamp)
+		// division between integer, since minimum unit for duration is seconds
+		currentTimeElapsed := currentTimeElapsedDuration.Nanoseconds() / 1_000_000_000
+
+		// iterate through the array of spot prices,
+		// updating all spot prices that are related to the changed token
+		for i, twapPair := range recentPoolTwap.TwapPairs {
+			// if any of the spot price pairs in twap history are related to the swapped tokens,
+			// update the spot price cumulative
+			if contains(modifiedPool.TokenChanged, twapPair.TokenIn, twapPair.TokenOut) {
+				changedSpotPrice, err := k.CalculateSpotPrice(ctx, modifiedPool.PoolId, twapPair.TokenIn, twapPair.TokenOut)
+				if err != nil {
+					return err
+				}
+				recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(changedSpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
+				recentPoolTwap.TwapPairs[i].SpotPrice = changedSpotPrice
+			} else {
+				recentPoolTwap.TwapPairs[i].PriceCumulative = recentPoolTwap.TwapPairs[i].PriceCumulative.Add(recentPoolTwap.TwapPairs[i].SpotPrice.Mul(sdk.NewDec(currentTimeElapsed)))
+			}
+		}
+
+		poolTwap := types.PoolTwapHistory{
+			TimeStamp: ctx.BlockTime(),
+			PoolId:    modifiedPool.PoolId,
+			TwapPairs: recentPoolTwap.TwapPairs,
+		}
+
+		k.SetPoolTwap(ctx, poolTwap)
 	}
 
-	poolTwap := types.PoolTwapHistory{
-		TimeStamp: ctx.BlockTime(),
-		PoolId:    poolId,
-		TwapPairs: recentPoolTwap.TwapPairs,
-	}
-
-	k.SetPoolTwap(ctx, poolTwap)
 	return nil
 }
 

@@ -33,10 +33,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params holds parameters for the incentives module
 type Params struct {
-	PoolCreationFee             github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=pool_creation_fee,json=poolCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"pool_creation_fee" yaml:"pool_creation_fee"`
-	NumTwapHistoryPerDeletion   uint64                                   `protobuf:"varint,2,opt,name=num_twap_history_per_deletion,json=numTwapHistoryPerDeletion,proto3" json:"num_twap_history_per_deletion,omitempty"`
-	TwapHistoryDeletionInterval uint64                                   `protobuf:"varint,3,opt,name=twap_history_deletion_interval,json=twapHistoryDeletionInterval,proto3" json:"twap_history_deletion_interval,omitempty"`
-	TwapHistoryKeepDuration     time.Duration                            `protobuf:"bytes,4,opt,name=twap_history_keep_duration,json=twapHistoryKeepDuration,proto3,stdduration" json:"duration,omitempty" yaml:"twap_history_keep_duration"`
+	PoolCreationFee           github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=pool_creation_fee,json=poolCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"pool_creation_fee" yaml:"pool_creation_fee"`
+	NumTwapHistoryPerDeletion uint64                                   `protobuf:"varint,2,opt,name=num_twap_history_per_deletion,json=numTwapHistoryPerDeletion,proto3" json:"num_twap_history_per_deletion,omitempty"`
+	// interval is in the unit of block height
+	TwapHistoryDeletionInterval uint64        `protobuf:"varint,3,opt,name=twap_history_deletion_interval,json=twapHistoryDeletionInterval,proto3" json:"twap_history_deletion_interval,omitempty"`
+	TwapHistoryKeepDuration     time.Duration `protobuf:"bytes,4,opt,name=twap_history_keep_duration,json=twapHistoryKeepDuration,proto3,stdduration" json:"duration,omitempty" yaml:"twap_history_keep_duration"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }

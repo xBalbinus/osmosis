@@ -11,6 +11,8 @@ const (
 
 	StoreKey = ModuleName
 
+	TStoreKey = "transient_" + ModuleName
+
 	RouterKey = ModuleName
 
 	QuerierRoute = ModuleName
@@ -27,6 +29,8 @@ var (
 	KeyPrefixPoolTwaps = []byte{0x04}
 	// KeyNextTwapHistoryDeleteIndex defines key to store the next twap history to be deleted
 	KeyNextTwapHistoryDeleteIndex = []byte{0x05}
+	// KeyModifiedPool defines key to store modified pools in the block
+	KeyModifiedPool = []byte{0x06}
 )
 
 func GetPoolShareDenom(poolId uint64) string {
@@ -43,4 +47,8 @@ func GetKeyPoolTwaps(poolId uint64, timestamp int64) []byte {
 	}
 	keyPrefix := append(KeyPrefixPoolTwaps, sdk.Uint64ToBigEndian(poolId)...)
 	return append(keyPrefix, sdk.Uint64ToBigEndian(uint64(timestamp))...)
+}
+
+func GetKeyModifiedPool(poolId uint64) []byte {
+	return append(KeyModifiedPool, sdk.Uint64ToBigEndian(poolId)...)
 }

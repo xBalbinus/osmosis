@@ -23,6 +23,7 @@ func permContains(perms []string, perm string) bool {
 
 type Keeper struct {
 	storeKey sdk.StoreKey
+	tKey     sdk.StoreKey
 	cdc      codec.BinaryMarshaler
 
 	paramSpace paramtypes.Subspace
@@ -34,7 +35,7 @@ type Keeper struct {
 	distrKeeper   types.DistrKeeper
 }
 
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, distrKeeper types.DistrKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, tKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, distrKeeper types.DistrKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -51,6 +52,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 	}
 	return Keeper{
 		storeKey:   storeKey,
+		tKey:       tKey,
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
