@@ -600,10 +600,7 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	forks(ctx, app)
-	res := app.mm.BeginBlock(ctx, req)
-
-	if app.testHardForkChainUpdateHeight > 0 && ctx.BlockHeight() == app.testHardForkChainUpdateHeight+1 {
+	if app.testHardForkChainUpdateHeight > 0 && ctx.BlockHeight() == app.testHardForkChainUpdateHeight {
 		ctx.Logger().Info("Update will be exeucted from hard fork", "height", ctx.BlockHeight())
 		// Maybe there is no way to get the registered handler from the upgrade keeper
 
@@ -636,7 +633,8 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 		ctx.Logger().Info("Update ends from hard fork", "height", ctx.BlockHeight())
 	}
 
-	return res
+	forks(ctx, app)
+	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block
