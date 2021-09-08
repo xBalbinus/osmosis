@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -33,6 +34,7 @@ func DefaultConfig() network.Config {
 				val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 				encCfg,
 				simapp.EmptyAppOptions{},
+				0, []crypto.PublicKey{},
 				baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 			)
 		},

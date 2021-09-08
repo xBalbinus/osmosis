@@ -6,6 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/osmosis-labs/osmosis/app/params"
 
@@ -120,6 +124,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
 
+	for _, cmd := range rootCmd.Commands() {
+		if cmd.Use == "start" {
+			cmd.Flags().AddFlagSet(FlagSetTestHardForkUpdate())
+			flags.AddTxFlagsToCmd(cmd)
+		}
+	}
+
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
@@ -184,6 +195,23 @@ func txCommand() *cobra.Command {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	testHardForkChainUpdateHeight := int64(0)
+	if i := cast.ToInt64(appOpts.Get(FlagTestHardForkChainUpdateHeight)); i > 0 {
+		testHardForkChainUpdateHeight = i
+	}
+	testHardForkValPubKeys := make([]crypto.PublicKey, 0)
+	for _, pk := range cast.ToStringSlice(appOpts.Get(FlagTestHardForkValPubKeys)) {
+		pubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pk)
+		if err != nil {
+			panic(err)
+		}
+		tmPk, err := cryptocodec.ToTmProtoPublicKey(pubKey)
+		if err != nil {
+			panic(err)
+		}
+		testHardForkValPubKeys = append(testHardForkValPubKeys, tmPk)
+	}
+
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
@@ -216,6 +244,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		osmosis.MakeEncodingConfig(), // Ideally, we would reuse the one created by NewRootCmd.
 		appOpts,
+		testHardForkChainUpdateHeight,
+		testHardForkValPubKeys,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -239,13 +269,13 @@ func createOsmosisAppAndExport(
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var app *osmosis.OsmosisApp
 	if height != -1 {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg, appOpts)
+		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg, appOpts, 0, []crypto.PublicKey{})
 
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg, appOpts)
+		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg, appOpts, 0, []crypto.PublicKey{})
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)

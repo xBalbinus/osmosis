@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
@@ -216,6 +218,9 @@ type OsmosisApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	testHardForkChainUpdateHeight int64
+	testHardForkValPubKeys        []crypto.PublicKey
 }
 
 func init() {
@@ -230,9 +235,9 @@ func init() {
 // NewOsmosis returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, appOpts servertypes.AppOptions, testHardForkChainUpdateHeight int64,
+	testHardForkValPubKeys []crypto.PublicKey, baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -263,6 +268,9 @@ func NewOsmosisApp(
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
+
+	app.testHardForkChainUpdateHeight = testHardForkChainUpdateHeight
+	app.testHardForkValPubKeys = testHardForkValPubKeys
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
@@ -593,12 +601,71 @@ func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block
 func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	forks(ctx, app)
-	return app.mm.BeginBlock(ctx, req)
+	res := app.mm.BeginBlock(ctx, req)
+
+	if app.testHardForkChainUpdateHeight > 0 && ctx.BlockHeight() == app.testHardForkChainUpdateHeight+1 {
+		ctx.Logger().Info("Update will be exeucted from hard fork", "height", ctx.BlockHeight())
+		// Maybe there is no way to get the registered handler from the upgrade keeper
+
+		// Upgrade all of the lock storages
+		locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
+		if err != nil {
+			panic(err)
+		}
+		// clear all lockup module locking / unlocking queue items
+		app.LockupKeeper.ClearAllLockRefKeys(ctx)
+		app.LockupKeeper.ClearAccumulationStores(ctx)
+
+		// reset all lock and references
+		for _, lock := range locks {
+			app.LockupKeeper.ResetLock(ctx, lock)
+		}
+
+		// Update distribution keeper parameters to remove proposer bonus
+		// as it doesn't make sense in the epoch'd staking setting
+		distrParams := app.DistrKeeper.GetParams(ctx)
+		distrParams.BaseProposerReward = sdk.ZeroDec()
+		distrParams.BonusProposerReward = sdk.ZeroDec()
+		app.DistrKeeper.SetParams(ctx, distrParams)
+
+		// configure upgrade for gamm module's pool creation fee param add
+		app.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+
+		prop12(ctx, app)
+
+		ctx.Logger().Info("Update ends from hard fork", "height", ctx.BlockHeight())
+	}
+
+	return res
 }
 
 // EndBlocker application updates every end block
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+	res := app.mm.EndBlock(ctx, req)
+
+	if app.testHardForkChainUpdateHeight > 0 && app.testHardForkChainUpdateHeight == ctx.BlockHeight() {
+		ctx.Logger().Info("Block will be hard forked to test upgrade from full state", "height", ctx.BlockHeight())
+
+		valUpdates := make(abci.ValidatorUpdates, 0)
+
+		// Clear all prior validators
+		vals := app.StakingKeeper.GetAllValidators(ctx)
+		for _, val := range vals {
+			valUpdates = append(valUpdates, val.ABCIValidatorUpdateZero())
+		}
+
+		// Set new valiadtor
+		for _, pubKey := range app.testHardForkValPubKeys {
+			valUpdates = append(valUpdates, abci.ValidatorUpdate{
+				PubKey: pubKey,
+				Power:  1_000_000_000_000,
+			})
+		}
+
+		res.ValidatorUpdates = valUpdates
+	}
+
+	return res
 }
 
 // InitChainer application update at chain initialization
