@@ -286,6 +286,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
+
+	recepientAddrs := make([]sdk.AccAddress, 0, remainCoins.Len())
+	amts := make([]sdk.Coins, 0, remainCoins.Len())
+
 	for _, lock := range locks {
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
@@ -304,9 +308,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 		if err != nil {
 			return nil, err
 		}
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, distrCoins); err != nil {
-			return nil, err
-		}
+
+		recepientAddrs = append(recepientAddrs, owner)
+		amts = append(amts, distrCoins)
 
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
@@ -318,6 +322,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauge types.Gauge) (sdk.Coins, error
 			),
 		})
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
+	}
+
+	if err := k.bk.SendCoinsFromModuleToManyAccounts(ctx, types.ModuleName, recepientAddrs, amts); err != nil {
+		return nil, err
 	}
 
 	// increase filled epochs after distribution
