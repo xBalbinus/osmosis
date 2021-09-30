@@ -92,6 +92,16 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		GaugeId: gauge3Id,
 		Weight:  sdk.NewInt(300),
 	})
+	keeper.ReplaceDistrRecords(suite.ctx, types.DistrRecord{
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
+	}, types.DistrRecord{
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
+	}, types.DistrRecord{
+		GaugeId: gauge3Id,
+		Weight:  sdk.NewInt(300),
+	})
 	suite.NoError(err)
 
 	// In this time, there are 3 records, so the assets to be allocated to the gauges proportionally.
