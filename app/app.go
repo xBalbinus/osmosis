@@ -211,6 +211,8 @@ type OsmosisApp struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
+	SimpleMetrics *SimpleMetrics
+
 	// the module manager
 	mm *module.Manager
 
@@ -263,6 +265,8 @@ func NewOsmosisApp(
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
+
+	app.SimpleMetrics = NewSimpleMetrics()
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
