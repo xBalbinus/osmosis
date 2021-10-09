@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"strings"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -28,12 +27,6 @@ func (app *OsmosisApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return abci.ResponseQuery{
 			Value: jsonRes,
 		}
-	}
-
-	// Only measure the grpc request.
-	// Custom request is hard to measure because it has the parameter datas in the path.
-	if strings.HasPrefix(req.Path, "custom") || strings.HasPrefix(req.Path, "/custom") {
-		return app.BaseApp.Query(req)
 	}
 
 	start := time.Now()
