@@ -15,6 +15,8 @@ import (
 // implements Queryable.
 func (app *OsmosisApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if req.Path == "/cosmos.staking.v1beta1.Query/ValidatorDelegations" {
+		// To check the number of forbidden requests
+		app.SimpleMetrics.Measure("/cosmos.staking.v1beta1.Query/ValidatorDelegations+forbidden", 0)
 		return abci.ResponseQuery{
 			Code:      1,
 			Log:       "This query is too resource intensive. Please run your node",
