@@ -16,8 +16,8 @@ var (
 		// Querying gov tally calculates the all voting of the validators and delegators.
 		// It can take a time 20sec ~ 30sec.
 		// Correct result is less important compared to how long this query takes.
-		// Therefore, to reduce resource usage, cache for 5 minutes.
-		"custom/gov/tally":                  5 * time.Minute,
+		// Therefore, to reduce resource usage, cache for 60 minutes.
+		"custom/gov/tally":                  60 * time.Minute,
 		"/osmosis.gamm.v1beta1.Query/Pools": 3 * time.Second,
 	}
 
