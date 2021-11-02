@@ -20,6 +20,26 @@ func (app *OsmosisApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 	}
 
+	if req.Path == "custom/staking/validatorDelegations" || req.Path == "/custom/staking/validatorDelegations" {
+		// To check the number of forbidden requests
+		app.SimpleMetrics.Measure("custom/staking/validatorDelegations+forbidden", 0)
+		return abci.ResponseQuery{
+			Code:      1,
+			Log:       "This query is too resource intensive. Please run your node",
+			Codespace: "forbidden",
+		}
+	}
+
+	if req.Path == "/cosmos.tx.v1beta1.Service/GetTxsEvent" {
+		// To check the number of forbidden requests
+		app.SimpleMetrics.Measure("/cosmos.tx.v1beta1.Service/GetTxsEvent+forbidden", 0)
+		return abci.ResponseQuery{
+			Code:      1,
+			Log:       "This query is too resource intensive. Please run your node",
+			Codespace: "forbidden",
+		}
+	}
+
 	if req.Path == "/simple-metric" || req.Path == "simple-metric" {
 		metricRes := app.SimpleMetrics.CalcAllAverageResponses()
 		jsonRes, err := json.Marshal(metricRes)
