@@ -20,6 +20,8 @@ sed -i '' 's%osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5%osmo1qye772qje88p7ggtzr
 # replace that accounts pubkey, obtained via auth. New pubkey obtained via new debug command
 sed -i '' 's%AqlNb1FM8veQrT4/apR5B3hww8VApc0LTtZnXhq7FqG0%A9zC0Sa0VCK/lVLi1Kv0C1c0MQp47d+yjFqb6dAUza0a%g' $EXPORTED_GENESIS
 
+#### Update consensus power
+
 # now time to replace the amounts
 # manually increase share amounts for 
 #          "delegator_address": "osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5",
@@ -34,14 +36,18 @@ sed -i '' 's%"power": "5041917"%"power": "105041917"%g' $EXPORTED_GENESIS
 # Update last_total_power (which is last total bonded across validators)
 sed -i '' 's%37961808%137961808%g' $EXPORTED_GENESIS
 
+# Fix bonded tokens pool balance, old 37961850148775
+sed -i '' 's%37961850148775%137961850148775%g' $EXPORTED_GENESIS
+
+#### Update individual account balances
+
 # edit operator address, old: 2125267 (2.1 osmo), new: 100000002125267 (100M + 2.1)
 sed -i '' 's%2125267%100000002125267%g' $EXPORTED_GENESIS
 
+#### Update total balance
+
 # Update total osmo supply, old 374314745901464, new 571M
 sed -i '' 's%374314745901464%574314745901464%g' $EXPORTED_GENESIS
-
-# Fix bonded tokens pool balance, old 37961850148775
-sed -i '' 's%37961850148775%137961850148775%g' $EXPORTED_GENESIS
 
 ### Fix gov params
 
