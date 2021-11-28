@@ -59,7 +59,7 @@ require (
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
@@ -95,11 +95,11 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
-	github.com/rs/zerolog v1.23.0 // indirect
+	github.com/rs/zerolog v1.26.0 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/viper v1.8.1 // indirect
+	github.com/spf13/viper v1.9.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -119,6 +119,7 @@ require (
 )
 
 replace (
+	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v1.0.0-juno
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.43.0-rc3.0.20211119062100-2f81f59f3aa1
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.14
