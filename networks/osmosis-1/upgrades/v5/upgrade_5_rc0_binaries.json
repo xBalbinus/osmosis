@@ -1,0 +1,7 @@
+{
+    "binaries": {
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/raw/5e9a7a7c84c78524dee62da66c559e502824a263/networks/osmosis-1/upgrades/v5/osmosisd-5.0.0-rc0-linux-amd64?checksum=sha256:6e5d908086bb7e60ad86c08071920545f6f2511b9192f22191338ade055acb39",
+        "linux/arm64": "https://github.com/osmosis-labs/osmosis/raw/5e9a7a7c84c78524dee62da66c559e502824a263/networks/osmosis-1/upgrades/v5/osmosisd-5.0.0-rc0-linux-arm64?checksum=sha256:ddb43311bbce82c5cc14b3ba0568ab3be2597b95cc924e78e0aeb9543ea24d24",
+        "darwin/amd64": "https://github.com/osmosis-labs/osmosis/raw/5e9a7a7c84c78524dee62da66c559e502824a263/networks/osmosis-1/upgrades/v5/osmosisd-5.0.0-rc0-darwin-amd64?checksum=sha256:859b94a92566ebbef1690ab6b09198bbbeedebb181c09723ae1c4f9c08dd2051"
+    }
+}
