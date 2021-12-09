@@ -1,0 +1,15 @@
+App: osmosisd
+Version: 5.0.0-rc0
+Commit: 0c76395679036a7daea0a91d40609c3ad02b5069
+Files:
+ 368f27c92c5f70e5bddedf525ecaac77  osmosisd-5.0.0-rc0-darwin-amd64
+ c4375c81921a2270893c71c4c7f179a2  osmosisd-5.0.0-rc0-linux-amd64
+ cea6963be5130a0ec6a2ca60f2b6fe9f  osmosisd-5.0.0-rc0-linux-arm64
+ 25a5d0fb20aa0173340ee89f3e28be83  osmosisd-5.0.0-rc0-windows-amd64.exe
+ ebfb717f6440523655452eaaba5cbd50  osmosisd-5.0.0-rc0.tar.gz
+Checksums-Sha256:
+ 859b94a92566ebbef1690ab6b09198bbbeedebb181c09723ae1c4f9c08dd2051  osmosisd-5.0.0-rc0-darwin-amd64
+ 6e5d908086bb7e60ad86c08071920545f6f2511b9192f22191338ade055acb39  osmosisd-5.0.0-rc0-linux-amd64
+ ddb43311bbce82c5cc14b3ba0568ab3be2597b95cc924e78e0aeb9543ea24d24  osmosisd-5.0.0-rc0-linux-arm64
+ 57b4d139eb937818f9298a3e9185886a404ee7a4f2cfaabbc3663d95dc6c8c78  osmosisd-5.0.0-rc0-windows-amd64.exe
+ 6e257e1672b26b08a831b7cf63c3a47e7d09607710a0b545bf86a89b862e15bd  osmosisd-5.0.0-rc0.tar.gz
