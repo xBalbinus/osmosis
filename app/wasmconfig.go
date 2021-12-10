@@ -7,9 +7,6 @@ import (
 	"github.com/spf13/cast"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -49,23 +46,23 @@ func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
-	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewJunoWasmGasRegister()))
+	// wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewJunoWasmGasRegister()))
 
 	return wasmOpts
 }
 
-func getGovProposalHandlers() []govclient.ProposalHandler {
-	var govProposalHandlers []govclient.ProposalHandler
-	// this line is used by starport scaffolding # stargate/app/govProposalHandlers
-	govProposalHandlers = wasmclient.ProposalHandlers
+// func getGovProposalHandlers() []govclient.ProposalHandler {
+// 	var govProposalHandlers []govclient.ProposalHandler
+// 	// this line is used by starport scaffolding # stargate/app/govProposalHandlers
+// 	govProposalHandlers = wasmclient.ProposalHandlers
 
-	govProposalHandlers = append(govProposalHandlers,
-		paramsclient.ProposalHandler,
-		distrclient.ProposalHandler,
-		upgradeclient.ProposalHandler,
-		upgradeclient.CancelProposalHandler,
-		// this line is used by starport scaffolding # stargate/app/govProposalHandler
-	)
+// 	govProposalHandlers = append(govProposalHandlers,
+// 		paramsclient.ProposalHandler,
+// 		distrclient.ProposalHandler,
+// 		upgradeclient.ProposalHandler,
+// 		upgradeclient.CancelProposalHandler,
+// 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
+// 	)
 
-	return govProposalHandlers
-}
+// 	return govProposalHandlers
+// }
