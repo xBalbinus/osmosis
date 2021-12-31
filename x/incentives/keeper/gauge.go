@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
@@ -357,6 +358,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 				types.TypeEvtDistribution,
 				sdk.NewAttribute(types.AttributeReceiver, distrs.idToBech32Addr[id]),
 				sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
+				sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(gauge.Id)),
 			),
 		})
 	}
