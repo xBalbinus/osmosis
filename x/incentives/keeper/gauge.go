@@ -351,17 +351,6 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 	if err != nil {
 		return err
 	}
-	ctx.Logger().Debug("Finished sending, now creating liquidity add events")
-	for id := 0; id < numIDs; id++ {
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				types.TypeEvtDistribution,
-				sdk.NewAttribute(types.AttributeReceiver, distrs.idToBech32Addr[id]),
-				sdk.NewAttribute(types.AttributeAmount, distrs.idToDistrCoins[id].String()),
-				sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(gauge.Id)),
-			),
-		})
-	}
 	ctx.Logger().Debug(fmt.Sprintf("Finished Distributing to %d users", numIDs))
 	return nil
 }
@@ -405,6 +394,14 @@ func (k Keeper) distributeInternal(
 			return nil, err
 		}
 
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtDistribution,
+				sdk.NewAttribute(types.AttributeGaugeID, utils.Uint64ToString(gauge.Id)),
+				sdk.NewAttribute(types.AttributeReceiver, lock.Owner),
+				sdk.NewAttribute(types.AttributeAmount, distrCoins.String()),
+			),
+		})
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
