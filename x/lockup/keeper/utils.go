@@ -67,6 +67,25 @@ func lockRefKeys(lock types.PeriodLock) ([][]byte, error) {
 	}
 	return refKeys, nil
 }
+func AAlockRefKeys(lock types.PeriodLock) ([][]byte, error) {
+	refKeys := [][]byte{}
+	timeKey := getTimeKey(lock.EndTime)
+	durationKey := getDurationKey(lock.Duration)
+
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, coin := range lock.Coins {
+		denomBz := []byte(coin.Denom)
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockTimestamp, timeKey, denomBz))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixDenomLockDuration, durationKey, denomBz))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockTimestamp, owner, timeKey, denomBz))
+		refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockDuration, owner, durationKey, denomBz))
+	}
+	return refKeys, nil
+}
 
 func combineLocks(pl1 []types.PeriodLock, pl2 []types.PeriodLock) []types.PeriodLock {
 	return append(pl1, pl2...)

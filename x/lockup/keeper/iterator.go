@@ -24,6 +24,18 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 	return store.Iterator(storetypes.PrefixEndBytes(key), storetypes.PrefixEndBytes(prefix))
 }
 
+func (k Keeper) AAiteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	timeKey := getTimeKey(time)
+
+	startKey := combineKeys(prefix, types.KeyPrefixDenomLockTimestamp, timeKey)
+	endKey := combineKeys(prefix, types.KeyPrefixDenomLockTimestamp)
+
+	// If it’s unlockTime, then it should count as unlocked
+	// inclusive end bytes = key + 1, next iterator
+	return store.Iterator(storetypes.PrefixEndBytes(startKey), storetypes.PrefixEndBytes(endKey))
+}
+
 func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
@@ -31,6 +43,17 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Tim
 	// If it’s unlockTime, then it should count as unlocked
 	// inclusive end bytes = key + 1, next iterator
 	return store.Iterator(prefix, storetypes.PrefixEndBytes(key))
+}
+
+func (k Keeper) AAiteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	timeKey := getTimeKey(time)
+
+	startKey := combineKeys(prefix, types.KeyPrefixDenomLockTimestamp)
+	endKey := combineKeys(prefix, types.KeyPrefixDenomLockTimestamp, timeKey)
+	// If it’s unlockTime, then it should count as unlocked
+	// inclusive end bytes = key + 1, next iterator
+	return store.Iterator(startKey, endKey)
 }
 
 func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
@@ -68,8 +91,20 @@ func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, isUnlocking bool, time ti
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
 }
 
+// LockIteratorAfterTime returns the iterator to get locked coins
+func (k Keeper) AALockIteratorAfterTime(ctx sdk.Context, isUnlocking bool, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp), time)
+}
+
 // LockIteratorBeforeTime returns the iterator to get unlockable coins
 func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool, time time.Time) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
+}
+
+// LockIteratorBeforeTime returns the iterator to get unlockable coins
+func (k Keeper) AALockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool, time time.Time) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
 }
@@ -78,6 +113,12 @@ func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, isUnlocking bool, time t
 func (k Keeper) LockIterator(ctx sdk.Context, isUnlocking bool) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp))
+}
+
+// LockIterator returns the iterator used for getting all locks
+func (k Keeper) AALockIterator(ctx sdk.Context, isUnlocking bool) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp))
 }
 
 // LockIteratorAfterTimeDenom returns the iterator to get locked coins by denom
