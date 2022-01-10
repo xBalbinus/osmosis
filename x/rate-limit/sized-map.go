@@ -1,6 +1,10 @@
 package rate_limit
 
+import "sync"
+
 type SizedMap struct {
+	mutex *sync.Mutex
+
 	chunks     []*chunkSizedMap
 	freshIndex int
 	oldIndex   int
@@ -11,10 +15,11 @@ type SizedMap struct {
 func NewSizedMap(chunkNum int, limitPerChunk int, creator func() interface{}) *SizedMap {
 	chunks := make([]*chunkSizedMap, 0, chunkNum)
 	for i := 0; i < chunkNum; i++ {
-		chunks = append(chunks, newChunkSizedMap(limitPerChunk, creator))
+		chunks = append(chunks, newChunkSizedMap(limitPerChunk))
 	}
 
 	return &SizedMap{
+		mutex:      new(sync.Mutex),
 		chunks:     chunks,
 		freshIndex: 0,
 		oldIndex:   0,
@@ -23,6 +28,9 @@ func NewSizedMap(chunkNum int, limitPerChunk int, creator func() interface{}) *S
 }
 
 func (m *SizedMap) Get(key string) interface{} {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	for _, chunk := range m.chunks {
 		if chunk.Has(key) {
 			return chunk.Get(key)
@@ -49,6 +57,9 @@ func (m *SizedMap) Get(key string) interface{} {
 }
 
 func (m *SizedMap) Size() int {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	r := 0
 	for _, chunk := range m.chunks {
 		r += chunk.Size()
@@ -57,28 +68,24 @@ func (m *SizedMap) Size() int {
 }
 
 type chunkSizedMap struct {
-	limit   int
-	m       map[string]interface{}
-	number  int
-	creator func() interface{}
+	limit int
+	m     map[string]interface{}
 }
 
-func newChunkSizedMap(limit int, creator func() interface{}) *chunkSizedMap {
-	return &chunkSizedMap{limit: limit, m: make(map[string]interface{}), number: 0, creator: creator}
+func newChunkSizedMap(limit int) *chunkSizedMap {
+	return &chunkSizedMap{limit: limit, m: make(map[string]interface{})}
 }
 
 func (m *chunkSizedMap) Get(key string) interface{} {
 	r, ok := m.m[key]
 	if !ok {
-		created := m.creator()
-		m.Set(key, created)
+		return nil
 	}
 	return r
 }
 
 func (m *chunkSizedMap) Set(key string, value interface{}) {
 	m.m[key] = value
-	m.number++
 }
 
 func (m *chunkSizedMap) Has(key string) bool {
@@ -87,11 +94,10 @@ func (m *chunkSizedMap) Has(key string) bool {
 }
 
 func (m *chunkSizedMap) IsMax() bool {
-	return m.number >= m.limit
+	return len(m.m) >= m.limit
 }
 
 func (m *chunkSizedMap) Clear() {
-	m.number = 0
 	m.m = make(map[string]interface{})
 }
 

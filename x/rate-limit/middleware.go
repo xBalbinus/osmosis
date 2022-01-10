@@ -49,7 +49,7 @@ func (r RateLimitMiddleware) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 		if !ok {
 			return next(ctx, tx, simulate)
 		}
-		if !limiter.AllowN(ctx.BlockTime(), 1) {
+		if !limiter.Allow() {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "rate limit has been reached. please wait and try again.")
 		}
 	}
