@@ -52,6 +52,11 @@ func TestPoolJson(t *testing.T) {
 	var a BalancerPool
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, pacc.String(), a.String())
+
+	var pool types.PoolI
+	pool = &pacc
+	bz, err = proto.Marshal(pool)
+	require.NoError(t, err)
 }
 
 func TestPoolProtoMarshal(t *testing.T) {

@@ -212,6 +212,7 @@ func (m *BalancerPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
+
 		if err != nil {
 			return nil, err
 		}
