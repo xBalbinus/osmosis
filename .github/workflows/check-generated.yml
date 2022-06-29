@@ -33,6 +33,7 @@ jobs:
           readonly tools="$(mktemp -d)"
           export PATH="${PATH}:${tools}/bin"
           export GOBIN="${tools}/bin"
+          make proto-gen
           make proto-all
           if ! git diff --stat --exit-code ; then
             echo ">> ERROR:"
