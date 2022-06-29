@@ -33,8 +33,8 @@ jobs:
           readonly tools="$(mktemp -d)"
           export PATH="${PATH}:${tools}/bin"
           export GOBIN="${tools}/bin"
-          go install github.com/bufbuild/buf/cmd/buf
-          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+          go get github.com/bufbuild/buf/cmd/buf
+          go get github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           make proto-all
           if ! git diff --stat --exit-code ; then
             echo ">> ERROR:"
