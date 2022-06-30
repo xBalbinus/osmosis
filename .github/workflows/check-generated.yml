@@ -24,12 +24,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1  # we need a .git directory to run git diff
-      
-      - name: "Update permissions"
-        run: git update-index --chmod=+x contrib/scripts/check-generated.sh
 
       - name: "Check protobuf generated code"
         shell: bash
         run: |
-          git update-index --chmod=+x contrib/scripts/check-generated.sh
+          git update-index --chmod=+x ./contrib/scripts/check-generated.sh
           contrib/scripts/check-generated.sh
