@@ -9,7 +9,7 @@ go get github.com/bufbuild/buf/cmd/buf
 
 #Specificially ignore all differences in go.mod / go.sum.
 echo "Generating Protobuf files"
-echo pwd
+pwd
 go run github.com/bufbuild/buf/cmd/buf generate
 mv ./proto/osmosis/abci/types.pb.go ./abci/types/
 
