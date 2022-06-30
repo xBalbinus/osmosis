@@ -5,6 +5,7 @@ readonly tools="$(mktemp -d)"
 export PATH="${PATH}:${tools}/bin"
 export GOBIN="${tools}/bin"
 go get github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+go get github.com/bufbuild/buf/cmd/buf
 
 #Specificially ignore all differences in go.mod / go.sum.
 echo "Generating Protobuf files"
