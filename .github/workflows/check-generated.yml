@@ -27,4 +27,4 @@ jobs:
 
       - name: "Check protobuf generated code"
         working-directory: proto
-        run: bash ./contrib/scripts/check-generated.sh
+        run: bash /contrib/scripts/check-generated.sh
